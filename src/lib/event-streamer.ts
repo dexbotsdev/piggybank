@@ -112,7 +112,7 @@ export class EventStreamerClient {
       };
 
       this.eventSource.onerror = (err) => {
-        console.error('💥 EventSource error:', err);
+        // console.error('💥 EventSource error:', err);
         this.notifyStatusListeners({
           isConnected: false,
           isConnecting: false,
