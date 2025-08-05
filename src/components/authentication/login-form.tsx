@@ -35,9 +35,6 @@ export function LoginForm() {
       <div className={'text-[30px] leading-[36px] font-medium tracking-[-0.6px] text-center'}>
         Log in to your account
       </div>
-      <Button onClick={() => handleAnonymousLogin()} type={'button'} variant={'secondary'} className={'w-full mt-6'}>
-        Log in as Guest
-      </Button>
       <div className={'flex w-full items-center justify-center'}>
         <Separator className={'w-5/12 bg-border'} />
         <div className={'text-border text-xs font-medium px-4'}>or</div>

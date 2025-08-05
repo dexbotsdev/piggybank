@@ -9,9 +9,7 @@ export function DashboardTutorialCard() {
         <CardTitle className="flex justify-between items-center text-xl mb-2 font-medium">Tutorials</CardTitle>
       </CardHeader>
       <CardContent className={'p-0 flex flex-col gap-6'}>
-        <div className="text-base leading-6 text-secondary">
-          Learn how to get the most out of AeroEdit tools and discover your inner artist.
-        </div>
+        <div className="text-base leading-6 text-secondary">Learn how to get the most out of Piggybank Sniper.</div>
         <div>
           <Button size={'sm'} variant={'outline'} className={'flex gap-2 text-sm rounded-sm border-border'}>
             Tutorials

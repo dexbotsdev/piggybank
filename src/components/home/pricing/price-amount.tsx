@@ -20,7 +20,7 @@ export function PriceAmount({ loading, priceMap, priceSuffix, tier, value }: Pro
           <div className={cn('text-[80px] leading-[96px] tracking-[-1.6px] font-medium')}>
             {priceMap[tier.priceId[value]].replace(/\.00$/, '')}
           </div>
-          <div className={cn('font-medium leading-[12px] text-[12px]')}>{priceSuffix}</div>
+          <div className={cn('font-medium leading-[12px] text-[12px]')}> Only</div>
         </>
       )}
     </div>

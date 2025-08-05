@@ -8,6 +8,8 @@ import { TransactionResponse } from '@/lib/api.types';
 export async function getTransactions(subscriptionId: string, after: string): Promise<TransactionResponse> {
   try {
     const customerId = await getCustomerId();
+
+    console.log(customerId);
     if (customerId) {
       const transactionCollection = getPaddleInstance().transactions.list({
         customerId: [customerId],
@@ -16,6 +18,9 @@ export async function getTransactions(subscriptionId: string, after: string): Pr
         status: ['billed', 'paid', 'past_due', 'completed', 'canceled'],
         subscriptionId: subscriptionId ? [subscriptionId] : undefined,
       });
+
+      console.log(transactionCollection);
+
       const transactionData = await transactionCollection.next();
       return {
         data: parseSDKResponse(transactionData ?? []),

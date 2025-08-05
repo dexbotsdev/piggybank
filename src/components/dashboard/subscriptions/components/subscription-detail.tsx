@@ -35,6 +35,8 @@ export function SubscriptionDetail({ subscriptionId }: Props) {
       if (transactionsResponse) {
         setTransactions(transactionsResponse);
       }
+      console.log(transactions);
+
       setLoading(false);
     })();
   }, [subscriptionId]);

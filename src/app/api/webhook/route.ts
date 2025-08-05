@@ -9,6 +9,10 @@ export async function POST(request: NextRequest) {
   const rawRequestBody = await request.text();
   const privateKey = process.env['PADDLE_NOTIFICATION_WEBHOOK_SECRET'] || '';
 
+  console.log(privateKey);
+  console.log(signature);
+  console.log(rawRequestBody);
+
   try {
     if (!signature || !rawRequestBody) {
       return Response.json({ error: 'Missing signature from header' }, { status: 400 });
@@ -17,6 +21,8 @@ export async function POST(request: NextRequest) {
     const paddle = getPaddleInstance();
     const eventData = await paddle.webhooks.unmarshal(rawRequestBody, privateKey, signature);
     const eventName = eventData?.eventType ?? 'Unknown event';
+
+    console.log(eventName);
 
     if (eventData) {
       await webhookProcessor.processEvent(eventData);

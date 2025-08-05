@@ -3,8 +3,9 @@ import { NoSubscriptionView } from '@/components/dashboard/subscriptions/views/n
 import { MultipleSubscriptionsView } from '@/components/dashboard/subscriptions/views/multiple-subscriptions-view';
 import { SubscriptionErrorView } from '@/components/dashboard/subscriptions/views/subscription-error-view';
 import { getSubscriptions } from '@/utils/paddle/get-subscriptions';
+import { SniperTable } from './sniper-table';
 
-export async function Subscriptions() {
+export async function CallSniperTrialView() {
   const { data: subscriptions } = await getSubscriptions();
 
   console.log(subscriptions);
@@ -13,9 +14,7 @@ export async function Subscriptions() {
     if (subscriptions.length === 0) {
       return <NoSubscriptionView />;
     } else if (subscriptions.length === 1) {
-      return <SubscriptionDetail subscriptionId={subscriptions[0].id} />;
-    } else {
-      return <MultipleSubscriptionsView subscriptions={subscriptions} />;
+      return <SniperTable />;
     }
   } else {
     return <SubscriptionErrorView />;
