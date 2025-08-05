@@ -31,4 +31,5 @@ export async function validateUserSession() {
   if (!session) {
     throw new Error('You are not allowed to perform this action.');
   }
+  return { session, supabase };
 }

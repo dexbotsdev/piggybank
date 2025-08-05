@@ -13,11 +13,12 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import type { ProcessedTokenData } from '@/lib/event-streamer';
 import axios from 'axios'; // Import axios
+import { executeTrade } from '@/app/dashboard/callsniper/actions';
 
 // Define a type for token snipe status
 type TokenSnipeStatus = Map<string, { status: 'success' | 'failure' | 'pending' }>;
 
-export function SniperTable() {
+export function SniperTable({ subscriptions }: { subscriptions: any[] }) {
   const {
     tokens,
     connection,
@@ -77,59 +78,43 @@ export function SniperTable() {
     }) => {
       const { token, tradeAmountSol, takeProfitPercentage, stopLossPercentage, isAutoTrade } = params;
 
-      // Set status to pending for the token
-      setTokenSnipeStatus((prev) => new Map(prev).set(token.mint, { status: 'pending' }));
+      let subscriptionId = '';
+
+      if (subscriptions.length > 0) {
+        //subscriptionId = subscriptions[0].
+      }
+      if (!walletPublicKey || !sniperooApiKey) {
+        throw new Error('Wallet Public Key or Sniperoo API Key not configured in settings.');
+      }
 
       try {
-        if (!walletPublicKey || !sniperooApiKey) {
-          throw new Error('Wallet Public Key or Sniperoo API Key not configured in settings.');
-        }
+        const formData = new FormData();
+        formData.append('subscriptionId', subscriptionId);
+        formData.append('walletPubkey', '' + walletPublicKey);
+        formData.append('tokenMint', '' + token.mint);
+        formData.append('sniperooApiKey', '' + sniperooApiKey);
+        formData.append('solAmount', '' + tradeAmountSol);
+        formData.append('takeProfit', '' + takeProfitPercentage);
+        formData.append('stopLoss', '' + stopLossPercentage);
 
-        const requestBody = {
-          walletAddresses: [walletPublicKey],
-          tokenAddress: token.mint,
-          inputAmount: tradeAmountSol,
-          autoSell: {
-            enabled: true, // Assuming auto-sell is always enabled for snipe
-            strategy: {
-              strategyName: 'simple',
-              profitPercentage: takeProfitPercentage,
-              stopLossPercentage: stopLossPercentage,
-            },
-          },
-        };
+        // Set status to pending for the token
+        setTokenSnipeStatus((prev) => new Map(prev).set(token.mint, { status: 'pending' }));
 
-        console.log(`[Sniperoo] Sending buy request:`, JSON.stringify(requestBody, null, 2));
+        const results = await executeTrade(formData);
 
-        const response = await axios.post('https://api.sniperoo.app/trading/buy-token?toastFrontendId=0', requestBody, {
-          headers: {
-            Authorization: `Bearer ${sniperooApiKey}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        console.log(`[Sniperoo] Buy response:`, response.data);
+        console.log(`[Sniperoo] Buy response:`, results);
 
         // Assuming the API returns a 'success' field or similar to indicate success
-        if (response.data && response.data.success) {
+        if (results.indexOf('Success')) {
           setTokenSnipeStatus((prev) => new Map(prev).set(token.mint, { status: 'success' }));
           console.log('✅ Trade executed successfully!');
-          if (!isAutoTrade) {
-            // Only show alert for manual trades
-            alert(
-              `Trade executed for ${token.ticker}!\nAmount: ${tradeAmountSol} SOL\nTake Profit: ${takeProfitPercentage}%\nStop Loss: ${stopLossPercentage}%`,
-            );
-          }
         } else {
-          throw new Error(response.data.message || 'API call failed with no success indication.');
+          setTokenSnipeStatus((prev) => new Map(prev).set(token.mint, { status: 'failure' }));
+          throw new Error(results || 'API call failed with no success indication.');
         }
       } catch (err) {
         console.error('Trade execution failed:', err);
         setTokenSnipeStatus((prev) => new Map(prev).set(token.mint, { status: 'failure' }));
-        if (!isAutoTrade) {
-          // Only show alert for manual trades
-          alert(`Trade execution failed for ${token.ticker}. Please check console for details.`);
-        }
       }
     },
     [walletPublicKey, sniperooApiKey],
@@ -383,7 +368,7 @@ export function SniperTable() {
             id="auto-trade-toggle"
             checked={autoTradeEnabled}
             onCheckedChange={setAutoTradeEnabled}
-            className="data-[state=checked]:bg-leaf-primary"
+            className="data-[state=checked]:bg-green-500"
           />
           <Label htmlFor="auto-trade-toggle" className="text-sm text-white">
             Auto Trade
@@ -399,7 +384,8 @@ export function SniperTable() {
               onChange={(e) => setAutoTradeAmountSol(e.target.value)}
               className="w-28 h-8 text-xs bg-leaf-highlight border-leaf-border text-white"
               disabled={isAutoTradeActive}
-            />
+            />{' '}
+            (in SOL)
             <Input
               placeholder="TP (%)"
               type="number"
@@ -410,7 +396,8 @@ export function SniperTable() {
               max="1000"
               step="1"
               disabled={isAutoTradeActive}
-            />
+            />{' '}
+            (TP in %ge)
             <Input
               placeholder="SL (%)"
               type="number"
@@ -421,7 +408,8 @@ export function SniperTable() {
               max="100"
               step="1"
               disabled={isAutoTradeActive}
-            />
+            />{' '}
+            (STPL in %ge)
             <Button
               onClick={handleStartStopAutoTrade}
               className={`${isAutoTradeActive ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'} text-white h-8 text-xs`}
@@ -481,7 +469,7 @@ export function SniperTable() {
       {/* Tokens Table */}
       <div className="bg-leaf-card border border-leaf-border rounded-lg overflow-hidden shadow-md">
         <div className="flex items-center justify-between p-4 border-b border-leaf-border">
-          <h3 className="font-medium text-sm text-white">Live Token Feed</h3>
+          <h3 className="font-medium text-sm text-white">Live Call Feed</h3>
           <span className="text-gray-400 text-xs">
             Showing {sortedTokens.length} token{sortedTokens.length !== 1 ? 's' : ''}
           </span>
@@ -522,8 +510,7 @@ export function SniperTable() {
               ) : (
                 sortedTokens.map((token) => {
                   const snipeStatus = tokenSnipeStatus.get(token.mint)?.status;
-                  const isSnipeButtonDisabled =
-                    isAutoTradeActive || snipeStatus === 'pending' || snipeStatus === 'success';
+                  const isSnipeButtonDisabled = isAutoTradeActive;
 
                   return (
                     <tr
@@ -627,7 +614,7 @@ export function SniperTable() {
                             onClick={() => handleSnipeClick(token)}
                             variant="default"
                             className="bg-leaf-primary hover:bg-leaf-primary/90 text-white h-7 px-3 text-xs"
-                            disabled={isSnipeButtonDisabled} // Disabled when auto-trade is active or snipe is pending/success
+                            // disabled={isSnipeButtonDisabled} Disabled when auto-trade is active or snipe is pending/success
                           >
                             {snipeStatus === 'pending' ? (
                               <>

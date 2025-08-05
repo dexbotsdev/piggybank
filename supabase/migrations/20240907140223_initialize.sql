@@ -3,6 +3,8 @@ create table
   public.customers (
     customer_id text not null,
     email text not null,
+    wallet_public_key text   null,
+    sniperoo_api_key text   null,
     created_at timestamp with time zone not null default now(),
     updated_at timestamp with time zone not null default now(),
     constraint customers_pkey primary key (customer_id)
